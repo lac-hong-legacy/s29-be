@@ -1,0 +1,179 @@
+services:
+  # Main application database for S29
+  s29-db:
+    image: postgres:15-alpine
+    container_name: s29-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-s29}
+    ports:
+      - "5432:5432"
+    volumes:
+      - s29_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - s29-network
+
+  # Kratos identity service database
+  kratos-db:
+    image: postgres:15-alpine
+    container_name: kratos-postgres
+    environment:
+      POSTGRES_USER: ${KRATOS_DB_USER:-kratos}
+      POSTGRES_PASSWORD: ${KRATOS_DB_PASSWORD:-kratos}
+      POSTGRES_DB: ${KRATOS_DB_NAME:-kratos}
+    ports:
+      - "5433:5432"
+    volumes:
+      - kratos_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${KRATOS_DB_USER:-kratos}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - s29-network
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: s29-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-s29-redis-pass}
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - s29-network
+
+  # Kratos database migration
+  kratos-migrate:
+    image: oryd/kratos:latest
+    container_name: kratos-migrate
+    depends_on:
+      kratos-db:
+        condition: service_healthy
+    environment:
+      DSN: postgres://${KRATOS_DB_USER:-kratos}:${KRATOS_DB_PASSWORD:-kratos}@kratos-db:5432/${KRATOS_DB_NAME:-kratos}?sslmode=disable&max_conns=50&max_idle_conns=10
+    volumes:
+      - ./kratos:/etc/config/kratos
+    command: migrate sql -e -y
+    networks:                             
+      - s29-network
+
+  # Ory Kratos identity service
+  kratos:
+    image: oryd/kratos:latest
+    container_name: s29-kratos
+    depends_on:
+      kratos-db:
+        condition: service_healthy
+      kratos-migrate:
+        condition: service_completed_successfully
+    environment:
+      # Database
+      DSN: postgres://${KRATOS_DB_USER:-kratos}:${KRATOS_DB_PASSWORD:-kratos}@kratos-db:5432/${KRATOS_DB_NAME:-kratos}?sslmode=disable&max_conns=50&max_idle_conns=10
+      
+      # URLs
+      SERVICE_PUBLIC_BASE_URL: ${KRATOS_PUBLIC_URL:-http://localhost:4433}
+      SERVICE_ADMIN_BASE_URL: ${KRATOS_ADMIN_URL:-http://localhost:4434}
+      SELF_SERVICE_DEFAULT_BROWSER_RETURN_URL: ${S29_APP_URL:-http://localhost:3000}/dashboard
+      SELF_SERVICE_FLOWS_ERROR_UI_URL: ${S29_APP_URL:-http://localhost:3000}/auth/error
+      SELF_SERVICE_FLOWS_SETTINGS_UI_URL: ${S29_APP_URL:-http://localhost:3000}/auth/settings
+      SELF_SERVICE_FLOWS_VERIFICATION_UI_URL: ${S29_APP_URL:-http://localhost:3000}/auth/verification
+      SELF_SERVICE_FLOWS_RECOVERY_UI_URL: ${S29_APP_URL:-http://localhost:3000}/auth/recovery
+      SELF_SERVICE_FLOWS_LOGIN_UI_URL: ${S29_APP_URL:-http://localhost:3000}/auth/login
+      SELF_SERVICE_FLOWS_REGISTRATION_UI_URL: ${S29_APP_URL:-http://localhost:3000}/auth/register
+      SELF_SERVICE_FLOWS_LOGOUT_REDIRECT_URL: ${S29_APP_URL:-http://localhost:3000}
+      
+      # Webhooks
+      SELF_SERVICE_FLOWS_AFTER_REGISTRATION_HOOK_URL: http://s29-api:8080/api/v1/internal/hooks/after-registration
+      
+      # Secrets (Change these in production!)
+      SECRETS_COOKIE: ${KRATOS_SECRET_COOKIE:-63f4945d921d599f27ae4fdf5bada3f1}
+      SECRETS_CIPHER: ${KRATOS_SECRET_CIPHER:-cf62abb2197c0a173c9a76b88caaedc3}
+      
+      # # OAuth (Add when ready)
+      # GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      # GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      
+      # # Email (Use Mailhog for development)
+      # COURIER_SMTP_CONNECTION_URI: ${KRATOS_COURIER_SMTP_CONNECTION_URI:-smtp://mailhog:1025}
+      # COURIER_SMTP_FROM_ADDRESS: ${KRATOS_COURIER_SMTP_FROM_ADDRESS:-noreply@audora.com}
+      
+      # Development mode
+      LOG_LEVEL: ${KRATOS_LOG_LEVEL:-debug}
+      DEV_DISABLE_CSRF: ${KRATOS_DEV_DISABLE_CSRF:-true}
+      
+    ports:
+      - "4433:4433"
+      - "4434:4434"
+    volumes:
+      - ./kratos:/etc/config/kratos
+    command: serve --config /etc/config/kratos/kratos.yml --dev
+    networks:
+      - s29-network
+
+  # Go backend application
+  s29-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: s29-api
+    depends_on:
+      s29-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # App
+      APP_ENV: ${APP_ENV:-development}
+      APP_PORT: ${APP_PORT:-8080}
+      
+      # Database
+      DB_HOST: s29-db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-s29}
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-s29-redis-pass}
+
+      # Kratos
+      KRATOS_PUBLIC_URL: http://kratos:4433
+      KRATOS_ADMIN_URL: http://kratos:4434
+      
+      # JWT for internal use
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-here}
+      
+      
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+    networks:
+      - s29-network
+
+
+  
+volumes:
+  s29_data:
+  kratos_data:
+  redis_data:
+
+networks:
+  s29-network:
+    driver: bridge

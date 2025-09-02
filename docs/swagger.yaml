@@ -1,0 +1,76 @@
+definitions:
+  models.ErrorResponse:
+    properties:
+      code:
+        example: 500
+        type: integer
+      details:
+        example: Additional error details
+        type: string
+      error:
+        example: Internal server error
+        type: string
+    type: object
+  models.HealthResponse:
+    properties:
+      status:
+        example: ok
+        type: string
+      timestamp:
+        example: "2023-08-31T12:00:00Z"
+        type: string
+      version:
+        example: 1.0.0
+        type: string
+    type: object
+  models.PingResponse:
+    properties:
+      message:
+        example: pong
+        type: string
+      timestamp:
+        example: "2023-08-31T12:00:00Z"
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Returns health status of the service with timestamp
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.HealthResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Health check endpoint
+      tags:
+      - health
+  /ping:
+    get:
+      consumes:
+      - application/json
+      description: Returns pong message with timestamp
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PingResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Ping endpoint
+      tags:
+      - health
+swagger: "2.0"

@@ -1,0 +1,262 @@
+version: v1.0.0
+
+# Database connection
+dsn: postgres://kratos:kratos@kratos-db:5432/kratos?sslmode=disable&max_conns=50&max_idle_conns=10
+
+serve:
+  public:
+    base_url: http://localhost:4433
+    cors:
+      enabled: true
+      allowed_origins:
+        - http://localhost:3000
+        - http://localhost:8080
+      allowed_methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      allowed_headers:
+        - Authorization
+        - Content-Type
+        - Cookie
+        - X-Requested-With
+        - Accept
+        - Origin
+      exposed_headers:
+        - Set-Cookie
+      allow_credentials: true
+  
+  admin:
+    base_url: http://localhost:4434
+
+selfservice:
+  default_browser_return_url: http://localhost:3000/dashboard
+  allowed_return_urls:
+    - http://localhost:3000
+    - http://localhost:3000/dashboard
+    - http://localhost:3000/profile
+
+  # Authentication methods
+  methods:
+    password:
+      enabled: true
+      config:
+        haveibeenpwned_enabled: true
+        haveibeenpwned_host: api.pwnedpasswords.com
+        max_breaches: 0
+        ignore_network_errors: false
+        min_password_length: 8
+        identifier_similarity_check_enabled: true
+    
+    link:
+      enabled: true
+      config:
+        lifespan: 24h
+    
+    # Add these when ready for 2FA
+    totp:
+      enabled: false
+    
+    webauthn:
+      enabled: false
+    
+    # Add OAuth when ready
+    oidc:
+      enabled: false
+
+  # Self-service flows
+  flows:
+    error:
+      ui_url: http://localhost:3000/auth/error
+
+    settings:
+      ui_url: http://localhost:3000/auth/settings
+      privileged_session_max_age: 15m
+      required_aal: aal1
+      lifespan: 1h
+
+    recovery:
+      enabled: true
+      ui_url: http://localhost:3000/auth/recovery
+      lifespan: 1h
+      notify_unknown_recipients: false
+      after:
+        default_browser_return_url: http://localhost:3000/auth/login?recovered=true
+
+    verification:
+      enabled: true
+      ui_url: http://localhost:3000/auth/verification
+      lifespan: 24h
+      notify_unknown_recipients: false
+      after:
+        default_browser_return_url: http://localhost:3000/dashboard?verified=true
+
+    logout:
+      after:
+        default_browser_return_url: http://localhost:3000
+
+    login:
+      ui_url: http://localhost:3000/auth/login
+      lifespan: 1h
+
+    registration:
+      lifespan: 1h
+      ui_url: http://localhost:3000/auth/register
+      after:
+        password:
+          hooks:
+            - hook: web_hook
+              config:
+                url: http://audora-api:8080/api/v1/internal/hooks/after-registration
+                method: POST
+                body: file:///etc/config/kratos/after-registration.jsonnet
+
+# Session configuration
+session:
+  lifespan: 720h  # 30 days
+  earliest_possible_extend: 1h
+  cookie:
+    name: ory_kratos_session
+    domain: localhost
+    path: /
+    same_site: Lax
+    persistent: true
+
+# Secrets (use environment variables)
+secrets:
+  cookie:
+    - ${KRATOS_SECRET_COOKIE}
+  cipher:
+    - ${KRATOS_SECRET_CIPHER}
+
+# Identity schema
+identity:
+  default_schema_id: audora_user
+  schemas:
+    - id: audora_user
+      url: file:///etc/config/kratos/identity.schema.json
+
+# Password hashing (optimized for development)
+hashers:
+  algorithm: argon2
+  argon2:
+    parallelism: 1
+    memory: 128MB
+    iterations: 2
+    salt_length: 16
+    key_length: 32
+    expected_duration: 500ms
+    expected_deviation: 500ms
+
+# Email configuration (Mailhog for development)
+courier:
+  smtp:
+    connection_uri: smtp://mailhog:1025
+    from_address: noreply@audora.com
+    from_name: Audora Music Platform
+  
+  # templates:
+  #   verification:
+  #     valid:
+  #       email:
+  #         subject: Verify your Audora account 🎵
+  #         body:
+  #           html: |
+  #             <!DOCTYPE html>
+  #             <html>
+  #             <head>
+  #                 <meta charset="UTF-8">
+  #                 <title>Verify your Audora account</title>
+  #                 <style>
+  #                     body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+  #                     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+  #                     .header { background: #667eea; color: white; padding: 20px; text-align: center; }
+  #                     .content { padding: 20px; background: #f9f9f9; }
+  #                     .button { display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; }
+  #                 </style>
+  #             </head>
+  #             <body>
+  #                 <div class="container">
+  #                     <div class="header">
+  #                         <h1>🎵 Welcome to Audora!</h1>
+  #                     </div>
+  #                     <div class="content">
+  #                         <h2>Hello {{ .Identity.traits.display_name }}!</h2>
+  #                         <p>Thanks for joining Audora, the artist-first music platform. Please verify your email to complete registration:</p>
+  #                         <p style="text-align: center;">
+  #                             <a href="{{ .VerificationURL }}" class="button">Verify Email</a>
+  #                         </p>
+  #                         <p>Or copy this link: {{ .VerificationURL }}</p>
+  #                         <p>This link expires in 24 hours.</p>
+  #                     </div>
+  #                 </div>
+  #             </body>
+  #             </html>
+  #           plaintext: |
+  #             Welcome to Audora!
+              
+  #             Hello {{ .Identity.traits.display_name }},
+              
+  #             Thanks for joining Audora! Please verify your email:
+  #             {{ .VerificationURL }}
+              
+  #             This link expires in 24 hours.
+    
+  #   recovery:
+  #     valid:
+  #       email:
+  #         subject: Reset your Audora password 🔐
+  #         body:
+  #           html: |
+  #             <!DOCTYPE html>
+  #             <html>
+  #             <head>
+  #                 <meta charset="UTF-8">
+  #                 <title>Reset your password</title>
+  #                 <style>
+  #                     body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+  #                     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+  #                     .header { background: #f5576c; color: white; padding: 20px; text-align: center; }
+  #                     .content { padding: 20px; background: #f9f9f9; }
+  #                     .button { display: inline-block; background: #f5576c; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; }
+  #                 </style>
+  #             </head>
+  #             <body>
+  #                 <div class="container">
+  #                     <div class="header">
+  #                         <h1>🔐 Password Reset</h1>
+  #                     </div>
+  #                     <div class="content">
+  #                         <h2>Hello {{ .Identity.traits.display_name }},</h2>
+  #                         <p>We received a request to reset your Audora password. Click the button below:</p>
+  #                         <p style="text-align: center;">
+  #                             <a href="{{ .RecoveryURL }}" class="button">Reset Password</a>
+  #                         </p>
+  #                         <p>Or copy this link: {{ .RecoveryURL }}</p>
+  #                         <p>This link expires in 1 hour for security.</p>
+  #                         <p>If you didn't request this, please ignore this email.</p>
+  #                     </div>
+  #                 </div>
+  #             </body>
+  #             </html>
+  #           plaintext: |
+  #             Password Reset for Audora
+              
+  #             Hello {{ .Identity.traits.display_name }},
+              
+  #             Reset your password here: {{ .RecoveryURL }}
+              
+  #             This link expires in 1 hour.
+
+# Logging
+log:
+  level: debug
+  format: text
+  leak_sensitive_values: true
+
+# Development mode
+dev:
+  disable_csrf: true
