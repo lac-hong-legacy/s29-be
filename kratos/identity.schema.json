@@ -27,17 +27,33 @@
             }
           }
         },
-        "display_name": {
+        "username": {
           "type": "string",
-          "title": "Display Name",
-          "minLength": 1,
-          "maxLength": 100
+          "title": "Username",
+          "minLength": 3,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_]+$",
+          "ory.sh/kratos": {
+            "credentials": {
+              "password": {
+                "identifier": true
+              }
+            }
+          }
         },
-        "year_of_birth": {
+        "age": {
           "type": "integer",
-          "title": "Year of Birth",
-          "minimum": 1900,
-          "maximum": 2025
+          "minimum": 10,
+          "maximum": 120,
+          "title": "Age"
+        },
+        "first_name": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "last_name": {
+          "type": "string",
+          "maxLength": 50
         },
         "birth_date": {
           "type": "string",
@@ -62,8 +78,8 @@
       },
       "required": [
         "email",
-        "display_name",
-        "year_of_birth"
+        "username",
+        "age"
       ],
       "additionalProperties": false
     }
