@@ -9,6 +9,7 @@ import (
 	"time"
 
 	authModule "s29-be/internal/auth"
+	userModule "s29-be/internal/user"
 	"s29-be/pkg/cache"
 	svcContext "s29-be/pkg/context"
 	"s29-be/pkg/database"
@@ -77,6 +78,9 @@ func main() {
 
 	authModule := authModule.NewAuthModule(serviceContext)
 	authModule.RegisterRoutes(v1)
+
+	userModule := userModule.NewUserModule(serviceContext)
+	userModule.RegisterRoutes(internalAPI)
 
 	app.Get("/health", HealthHandler)
 

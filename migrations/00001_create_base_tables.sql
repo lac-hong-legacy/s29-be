@@ -5,6 +5,7 @@
 CREATE TABLE users (
     id UUID PRIMARY KEY NOT NULL,
     kratos_identity_id UUID NOT NULL UNIQUE, -- Links to Kratos identity
+    email VARCHAR(255) NOT NULL UNIQUE,
     is_active BOOLEAN DEFAULT true,
 
     xp_points BIGINT DEFAULT 0,
