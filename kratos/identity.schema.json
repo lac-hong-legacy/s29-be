@@ -1,7 +1,7 @@
 {
   "$id": "https://audora.com/schemas/user.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Audora User",
+  "title": "Su Ta User",
   "type": "object",
   "properties": {
     "traits": {
@@ -33,26 +33,16 @@
           "minLength": 1,
           "maxLength": 100
         },
-        "first_name": {
-          "type": "string",
-          "title": "First Name",
-          "maxLength": 50
+        "year_of_birth": {
+          "type": "integer",
+          "title": "Year of Birth",
+          "minimum": 1900,
+          "maximum": 2025
         },
-        "last_name": {
+        "birth_date": {
           "type": "string",
-          "title": "Last Name",
-          "maxLength": 50
-        },
-        "user_type": {
-          "type": "string",
-          "enum": ["listener", "artist"],
-          "title": "Account Type",
-          "default": "listener"
-        },
-        "artist_name": {
-          "type": "string",
-          "title": "Artist/Band Name",
-          "maxLength": 100
+          "format": "date",
+          "title": "Birth Date"
         },
         "bio": {
           "type": "string",
@@ -68,33 +58,12 @@
           "type": "string",
           "format": "uri",
           "title": "Profile Image URL"
-        },
-        "preferences": {
-          "type": "object",
-          "properties": {
-            "email_notifications": {
-              "type": "boolean",
-              "title": "Email Notifications",
-              "default": true
-            },
-            "marketing_emails": {
-              "type": "boolean",
-              "title": "Marketing Emails",
-              "default": false
-            }
-          }
         }
       },
       "required": [
         "email",
         "display_name",
-        "user_type"
-      ],
-      "allOf": [
-        {
-          "if": { "properties": { "user_type": { "const": "artist" } } },
-          "then": { "required": ["artist_name"] }
-        }
+        "year_of_birth"
       ],
       "additionalProperties": false
     }
