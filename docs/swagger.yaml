@@ -1,4 +1,45 @@
 definitions:
+  domain.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      token_type:
+        type: string
+      user:
+        $ref: '#/definitions/domain.UserInfo'
+    type: object
+  domain.UserInfo:
+    properties:
+      display_name:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      kratos_identity_id:
+        type: string
+      user_type:
+        type: string
+    type: object
+  http.LoginRequest:
+    properties:
+      session_token:
+        type: string
+    required:
+    - session_token
+    type: object
+  http.RefreshTokenRequest:
+    properties:
+      session_token:
+        description: 'NEW: Required for security'
+        type: string
+    required:
+    - session_token
+    type: object
   models.ErrorResponse:
     properties:
       code:
@@ -35,6 +76,92 @@ definitions:
 info:
   contact: {}
 paths:
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login with Kratos session token to receive Audora JWT
+      parameters:
+      - description: Login Request
+        in: body
+        name: loginRequest
+        required: true
+        schema:
+          $ref: '#/definitions/http.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.LoginResponse'
+      summary: Login
+      tags:
+      - Auth
+  /api/v1/auth/me:
+    get:
+      consumes:
+      - application/json
+      description: Get information about the currently authenticated user
+      parameters:
+      - description: Bearer {token}
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.UserInfo'
+      summary: Get Current User
+      tags:
+      - Auth
+  /api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh JWT token using current JWT and Kratos session token
+      parameters:
+      - description: Refresh Token Request
+        in: body
+        name: refreshTokenRequest
+        required: true
+        schema:
+          $ref: '#/definitions/http.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.LoginResponse'
+      summary: Refresh Token
+      tags:
+      - Auth
+  /api/v1/auth/validate:
+    post:
+      consumes:
+      - application/json
+      description: Validate JWT token and return user info
+      parameters:
+      - description: Bearer {token}
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.UserInfo'
+      summary: Validate Token
+      tags:
+      - Auth
   /health:
     get:
       consumes:

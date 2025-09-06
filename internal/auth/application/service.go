@@ -108,19 +108,7 @@ func (s *AuthService) ValidateJWT(tokenString string) (*jwt.Claims, error) {
 }
 
 // FIXED: RefreshToken now validates Kratos session before issuing new JWT
-func (s *AuthService) RefreshToken(currentTokenString string, sessionToken string) (*domain.LoginResponse, error) {
-	// Step 1: Validate the current JWT to get user info (but allow expired tokens for refresh)
-	claims, err := s.jwtService.ValidateToken(currentTokenString)
-	if err != nil {
-		// Allow parsing of expired tokens for refresh, but still validate signature
-		claims, err = s.parseExpiredToken(currentTokenString)
-		if err != nil {
-			return nil, appError.NewUnauthorizedError(err, "invalid token for refresh")
-		}
-	}
-
-	// Step 2: CRITICAL - Re-validate with Kratos session
-	// This ensures the Kratos session is still valid and not revoked
+func (s *AuthService) RefreshToken(sessionToken string) (*domain.LoginResponse, error) {
 	if sessionToken == "" {
 		return nil, appError.NewUnauthorizedError(nil, "session token required for refresh")
 	}
@@ -133,12 +121,6 @@ func (s *AuthService) RefreshToken(currentTokenString string, sessionToken strin
 		return nil, appError.NewInternalError(err, "failed to verify session with Kratos during refresh")
 	}
 
-	// Step 3: Ensure the Kratos identity matches the JWT claims
-	if session.Identity.ID != claims.KratosIdentityID {
-		return nil, appError.NewUnauthorizedError(nil, "session identity mismatch")
-	}
-
-	// Step 4: Re-fetch user from database to get latest data
 	kratosIdentityID, err := uuid.Parse(session.Identity.ID)
 	if err != nil {
 		return nil, appError.NewBadRequestError(err, "invalid kratos identity ID")
@@ -149,18 +131,16 @@ func (s *AuthService) RefreshToken(currentTokenString string, sessionToken strin
 		return nil, appError.NewNotFoundError(err, "user not found in Audora database")
 	}
 
-	// Step 5: Validate user is still active
 	if !user.IsActive {
 		return nil, appError.NewForbiddenError(nil, "user account is deactivated")
 	}
 
-	// Step 6: Generate new JWT with FRESH user data
 	tokenLifetime := 24 * time.Hour
 	newToken, err := s.jwtService.GenerateToken(
 		user.ID,
 		user.KratosIdentityID.String(),
-		user.Email,    // Fresh from DB
-		user.IsActive, // Fresh from DB
+		user.Email,
+		user.IsActive,
 	)
 	if err != nil {
 		return nil, appError.NewInternalError(err, "failed to generate new token")
@@ -177,10 +157,6 @@ func (s *AuthService) RefreshToken(currentTokenString string, sessionToken strin
 			IsActive:         user.IsActive,
 		},
 	}, nil
-}
-
-func (s *AuthService) parseExpiredToken(tokenString string) (*jwt.Claims, error) {
-	return s.jwtService.ValidateTokenIgnoringExpiry(tokenString)
 }
 
 func (s *AuthService) GetCurrentUser(claims *jwt.Claims) (*domain.UserInfo, error) {
