@@ -80,7 +80,7 @@ func main() {
 	authModule.RegisterRoutes(v1)
 
 	userModule := userModule.NewUserModule(serviceContext)
-	userModule.RegisterRoutes(internalAPI)
+	userModule.RegisterRoutes(v1)
 
 	app.Get("/health", HealthHandler)
 

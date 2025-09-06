@@ -38,6 +38,7 @@ selfservice:
     - http://localhost:3000
     - http://localhost:3000/dashboard
     - http://localhost:3000/profile
+    - http://localhost:3000/auth/login
 
   # Authentication methods
   methods:
@@ -55,6 +56,10 @@ selfservice:
       enabled: true
       config:
         lifespan: 24h
+    code:
+      enabled: true
+      config:
+        lifespan: 15m
     
     # Add these when ready for 2FA
     totp:
@@ -73,18 +78,22 @@ selfservice:
       ui_url: http://localhost:3000/auth/error
 
     settings:
-      ui_url: http://localhost:3000/auth/settings
       privileged_session_max_age: 15m
       required_aal: aal1
       lifespan: 1h
 
     recovery:
       enabled: true
-      ui_url: http://localhost:3000/auth/recovery
       lifespan: 1h
-      notify_unknown_recipients: false
+      notify_unknown_recipients: true
+      use: code
       after:
-        default_browser_return_url: http://localhost:3000/auth/login?recovered=true
+        hooks:
+          - hook: web_hook
+            config:
+              url: http://s29-api:8080/api/v1/internal/hooks/after-recovery
+              method: POST
+              body: file:///etc/config/kratos/after-recovery.jsonnet
 
     verification:
       enabled: true
@@ -154,16 +163,20 @@ hashers:
 # Email configuration (Mailhog for development)
 courier:
   smtp:
-    connection_uri: smtp://mailhog:1025
-    from_address: noreply@audora.com
-    from_name: Audora Music Platform
+    connection_uri: ${COURIER_SMTP_CONNECTION_URI}
+    from_address: ${COURIER_SMTP_FROM_ADDRESS}
+    from_name: ${COURIER_SMTP_FROM_NAME}
+  
+  
+feature_flags:
+  use_continue_with_transitions: true
 
 # Logging
 log:
-  level: debug
+  level: ${KRATOS_LOG_LEVEL}
   format: text
   leak_sensitive_values: true
 
 # Development mode
 dev:
-  disable_csrf: true
+  disable_csrf: ${KRATOS_DEV_DISABLE_CSRF}

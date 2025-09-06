@@ -75,4 +75,9 @@ func (a *AuthModule) RegisterRoutes(router fiber.Router) {
 			protected.Post("/logout", a.Handler.Logout) // Logout (optional)
 		}
 	}
+
+	internal := router.Group("internal/hooks")
+	{
+		internal.Post("/after-recovery", a.Handler.AfterRecovery)
+	}
 }
