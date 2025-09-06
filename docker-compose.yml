@@ -56,6 +56,15 @@ services:
     networks:
       - s29-network
 
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: s29-mailhog
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web interface
+    networks:
+      - s29-network
+
   # Kratos database migration
   kratos-migrate:
     image: oryd/kratos:latest
@@ -107,10 +116,11 @@ services:
       # GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       # GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       
-      # # Email (Use Mailhog for development)
-      # COURIER_SMTP_CONNECTION_URI: ${KRATOS_COURIER_SMTP_CONNECTION_URI:-smtp://mailhog:1025}
-      # COURIER_SMTP_FROM_ADDRESS: ${KRATOS_COURIER_SMTP_FROM_ADDRESS:-noreply@audora.com}
-      
+     # Email configuration (using Mailhog for development)
+      COURIER_SMTP_CONNECTION_URI: smtp://mailhog:1025
+      COURIER_SMTP_FROM_ADDRESS: noreply@suviet.com
+      COURIER_SMTP_FROM_NAME: "Suviet Platform"
+
       # Development mode
       LOG_LEVEL: ${KRATOS_LOG_LEVEL:-debug}
       DEV_DISABLE_CSRF: ${KRATOS_DEV_DISABLE_CSRF:-true}

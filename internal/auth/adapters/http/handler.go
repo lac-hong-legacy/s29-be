@@ -2,6 +2,7 @@ package http
 
 import (
 	"s29-be/internal/auth/application"
+	"s29-be/internal/auth/domain"
 	appError "s29-be/pkg/error"
 	jsonResponse "s29-be/pkg/json"
 	"s29-be/pkg/jwt"
@@ -175,7 +176,7 @@ func (h *AuthHandler) ValidateToken(c *fiber.Ctx) error {
 		return nil
 	}
 
-	userInfo := &application.UserInfo{
+	userInfo := &domain.UserInfo{
 		ID:               claims.UserID,
 		KratosIdentityID: claims.KratosIdentityID,
 		Email:            claims.Email,
