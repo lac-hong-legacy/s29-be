@@ -2,10 +2,7 @@
 package application
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"s29-be/internal/auth/adapters/repository"
 	"s29-be/internal/auth/domain"
 	model "s29-be/internal/user/domain"
@@ -21,13 +18,16 @@ type AuthService struct {
 	authRepo     *repository.AuthRepository
 	kratosClient *kratos.Client
 	jwtService   *jwt.JWTService
+	// Temporary storage for recovery codes (in production, use Redis or similar)
+	recoveryCodeCache map[string]string // flowID -> code
 }
 
 func NewAuthService(authRepo *repository.AuthRepository, kratosClient *kratos.Client, jwtService *jwt.JWTService) *AuthService {
 	return &AuthService{
-		authRepo:     authRepo,
-		kratosClient: kratosClient,
-		jwtService:   jwtService,
+		authRepo:          authRepo,
+		kratosClient:      kratosClient,
+		jwtService:        jwtService,
+		recoveryCodeCache: make(map[string]string),
 	}
 }
 
@@ -200,180 +200,4 @@ func (s *AuthService) FindUserByKratosIdentityID(kratosID uuid.UUID) (*model.Use
 
 func (s *AuthService) UpdateUserLastLogin(user *model.User) error {
 	return s.authRepo.UpdateUserLastLogin(user)
-}
-
-func (s *AuthService) InitiatePasswordRecovery(email string) (*domain.RecoveryFlow, error) {
-	// Create a new recovery flow with Kratos
-	url := fmt.Sprintf("%s/self-service/recovery/api", s.kratosClient.GetPublicURL())
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, appError.NewInternalError(err, "failed to create recovery flow request")
-	}
-
-	req.Header.Set("Accept", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, appError.NewInternalError(err, "failed to initiate recovery flow")
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, appError.NewInternalError(nil, fmt.Sprintf("kratos returned status %d", resp.StatusCode))
-	}
-
-	var flow domain.RecoveryFlow
-	if err := json.NewDecoder(resp.Body).Decode(&flow); err != nil {
-		return nil, appError.NewInternalError(err, "failed to decode recovery flow response")
-	}
-
-	// Now submit the email to trigger OTP code sending
-	_, err = s.SubmitRecoveryFlow(flow.ID, email, "")
-	if err != nil {
-		return nil, err
-	}
-
-	return &flow, nil
-}
-
-func (s *AuthService) SubmitRecoveryFlow(flowID, email, csrfToken string) (*domain.RecoverySubmissionResult, error) {
-	url := fmt.Sprintf("%s/self-service/recovery?flow=%s", s.kratosClient.GetPublicURL(), flowID)
-
-	payload := map[string]interface{}{
-		"method": "code",
-		"email":  email,
-	}
-
-	if csrfToken != "" {
-		payload["csrf_token"] = csrfToken
-	}
-
-	jsonData, err := json.Marshal(payload)
-	if err != nil {
-		return nil, appError.NewInternalError(err, "failed to marshal recovery submission")
-	}
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return nil, appError.NewInternalError(err, "failed to create recovery submission request")
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, appError.NewInternalError(err, "failed to submit recovery flow")
-	}
-	defer resp.Body.Close()
-
-	var result domain.RecoverySubmissionResult
-	if err := json.NewDecoder(resp.Body).Decode(&result.Flow); err != nil {
-		return nil, appError.NewInternalError(err, "failed to decode recovery submission response")
-	}
-
-	// Check if the submission was successful
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		result.Success = true
-		result.Message = "Recovery code sent successfully"
-		result.Step = "code_sent"
-	} else {
-		result.Success = false
-		result.Message = "Failed to send recovery code"
-	}
-
-	return &result, nil
-}
-
-func (s *AuthService) SetNewPassword(flowID, password string) (*domain.RecoverySubmissionResult, error) {
-	url := fmt.Sprintf("%s/self-service/recovery?flow=%s", s.kratosClient.GetPublicURL(), flowID)
-
-	payload := map[string]interface{}{
-		"method":   "code",
-		"password": password,
-	}
-
-	jsonData, err := json.Marshal(payload)
-	if err != nil {
-		return nil, appError.NewInternalError(err, "failed to marshal password update")
-	}
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return nil, appError.NewInternalError(err, "failed to create password update request")
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, appError.NewInternalError(err, "failed to set new password")
-	}
-	defer resp.Body.Close()
-
-	var result domain.RecoverySubmissionResult
-	if err := json.NewDecoder(resp.Body).Decode(&result.Flow); err != nil {
-		return nil, appError.NewInternalError(err, "failed to decode password update response")
-	}
-
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		result.Success = true
-		result.Message = "Password updated successfully"
-		result.Step = "password_set"
-	} else {
-		result.Success = false
-		result.Message = "Failed to update password"
-	}
-
-	return &result, nil
-}
-
-func (s *AuthService) VerifyRecoveryCode(flowID, code string) (*domain.RecoverySubmissionResult, error) {
-	url := fmt.Sprintf("%s/self-service/recovery?flow=%s", s.kratosClient.GetPublicURL(), flowID)
-
-	payload := map[string]interface{}{
-		"method": "code",
-		"code":   code,
-	}
-
-	jsonData, err := json.Marshal(payload)
-	if err != nil {
-		return nil, appError.NewInternalError(err, "failed to marshal code verification")
-	}
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return nil, appError.NewInternalError(err, "failed to create code verification request")
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, appError.NewInternalError(err, "failed to verify recovery code")
-	}
-	defer resp.Body.Close()
-
-	var result domain.RecoverySubmissionResult
-	if err := json.NewDecoder(resp.Body).Decode(&result.Flow); err != nil {
-		return nil, appError.NewInternalError(err, "failed to decode code verification response")
-	}
-
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		result.Success = true
-		result.Message = "Code verified successfully"
-		result.Step = "code_verified"
-	} else {
-		result.Success = false
-		result.Message = "Invalid or expired code"
-	}
-
-	return &result, nil
 }

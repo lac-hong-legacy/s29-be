@@ -67,11 +67,6 @@ func (a *AuthModule) RegisterRoutes(router fiber.Router) {
 		auth.Post("/refresh", a.Handler.RefreshToken)         // Refresh JWT token
 		auth.Post("/validate", a.Handler.ValidateToken)       // Validate token (for other services)
 
-		// Password recovery endpoints
-		auth.Post("/recovery/initiate", a.Handler.InitiateRecovery)
-		auth.Get("/recovery/verify-code", a.Handler.VerifyRecoveryCode)
-		auth.Post("/recovery/set-password", a.Handler.SetNewPassword)
-
 		// Protected endpoints
 		protected := auth.Group("")
 		protected.Use(a.Middleware.RequireAuth())

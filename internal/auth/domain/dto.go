@@ -39,20 +39,3 @@ type RecoveryInfo struct {
 	RecoveryMethod string    `json:"recovery_method"`
 	RecoveredAt    time.Time `json:"recovered_at"`
 }
-
-type RecoveryFlow struct {
-	ID          string      `json:"id"`
-	Type        string      `json:"type"`
-	ExpiresAt   string      `json:"expires_at"`
-	IssuedAt    string      `json:"issued_at"`
-	RequestURL  string      `json:"request_url"`
-	UI          interface{} `json:"ui"`
-	State       string      `json:"state"`
-}
-
-type RecoverySubmissionResult struct {
-	Flow    RecoveryFlow `json:"flow"`
-	Success bool         `json:"success"`
-	Message string       `json:"message"`
-	Step    string       `json:"step"` // "code_sent", "code_verified", "password_set"
-}
