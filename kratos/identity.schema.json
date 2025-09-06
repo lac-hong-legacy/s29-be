@@ -1,7 +1,7 @@
 {
-  "$id": "https://audora.com/schemas/user.schema.json",
+  "$id": "https://s29.com/schemas/user.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Su Ta User",
+  "title": "S29 User",
   "type": "object",
   "properties": {
     "traits": {
