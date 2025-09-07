@@ -45,9 +45,7 @@ func (m *AuthMiddleware) RequireAuth() fiber.Handler {
 		c.Locals("user_claims", claims)
 		c.Locals("user_id", claims.UserID)
 		c.Locals("kratos_identity_id", claims.KratosIdentityID)
-		c.Locals("user_type", claims.UserType)
 		c.Locals("user_email", claims.Email)
-		c.Locals("user_tier", "free") // Default to free tier, can be updated later
 
 		return c.Next()
 	}
