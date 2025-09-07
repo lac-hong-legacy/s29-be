@@ -62,17 +62,20 @@ func (a *AuthModule) RegisterRoutes(router fiber.Router) {
 	auth := router.Group("auth")
 	{
 		// Public endpoints
-		auth.Post("/login", a.Handler.Login)                  // Login with session token from body
-		auth.Post("/login/cookie", a.Handler.LoginWithCookie) // Login with session token from cookie
-		auth.Post("/refresh", a.Handler.RefreshToken)         // Refresh JWT token
-		auth.Post("/validate", a.Handler.ValidateToken)       // Validate token (for other services)
+		auth.Post("/login", a.Handler.Login)            // Login with session token from body
+		auth.Post("/refresh", a.Handler.RefreshToken)   // Refresh JWT token
+		auth.Post("/validate", a.Handler.ValidateToken) // Validate token (for other services)
 
 		// Protected endpoints
 		protected := auth.Group("")
 		protected.Use(a.Middleware.RequireAuth())
 		{
-			protected.Get("/me", a.Handler.Me)          // Get current user info
-			protected.Post("/logout", a.Handler.Logout) // Logout (optional)
+			protected.Get("/me", a.Handler.Me) // Get current user info
 		}
+	}
+
+	internal := router.Group("internal/hooks")
+	{
+		internal.Post("/after-recovery", a.Handler.AfterRecovery)
 	}
 }

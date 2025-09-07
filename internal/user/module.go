@@ -28,6 +28,6 @@ func NewUserModule(serviceContext *ctx2.ServiceContext) *UserModule {
 }
 
 func (u *UserModule) RegisterRoutes(router fiber.Router) {
-	internal := router.Group("internal")
+	internal := router.Group("/internal")
 	internal.Post("/hooks/after-registration", u.Handler.AfterRegistration)
 }

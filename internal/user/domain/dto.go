@@ -18,13 +18,9 @@ type IdentityData struct {
 }
 
 type UserTraits struct {
-	Email        string          `json:"email"`
-	DisplayName  string          `json:"display_name"`
-	YearOfBirth  int             `json:"year_of_birth"`
-	BirthDate    *string         `json:"birth_date"`
-	Bio          *string         `json:"bio"`
-	Location     *string         `json:"location"`
-	ProfileImage *string         `json:"profile_image"`
+	Email    string `json:"email"`
+	UserName string `json:"username"`
+	Age      int    `json:"age"`
 }
 
 type FlowData struct {

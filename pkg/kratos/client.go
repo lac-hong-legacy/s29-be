@@ -141,37 +141,10 @@ func (c *Client) VerifySession(sessionToken string) (*Session, error) {
 	return &session, nil
 }
 
-// GetTraits safely extracts traits from identity
-func (i *Identity) GetTraits() map[string]interface{} {
-	if i.Traits == nil {
-		return make(map[string]interface{})
-	}
-	return i.Traits
+func (c *Client) GetPublicURL() string {
+	return c.publicURL
 }
 
-// GetEmail extracts email from traits
-func (i *Identity) GetEmail() string {
-	traits := i.GetTraits()
-	if email, ok := traits["email"].(string); ok {
-		return email
-	}
-	return ""
-}
-
-// GetDisplayName extracts display name from traits
-func (i *Identity) GetDisplayName() string {
-	traits := i.GetTraits()
-	if displayName, ok := traits["display_name"].(string); ok {
-		return displayName
-	}
-	return ""
-}
-
-// GetUserType extracts user type from traits
-func (i *Identity) GetUserType() string {
-	traits := i.GetTraits()
-	if userType, ok := traits["user_type"].(string); ok {
-		return userType
-	}
-	return "listener" // default
+func (c *Client) GetAdminURL() string {
+	return c.adminURL
 }
