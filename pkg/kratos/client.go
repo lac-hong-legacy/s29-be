@@ -148,3 +148,17 @@ func (c *Client) GetPublicURL() string {
 func (c *Client) GetAdminURL() string {
 	return c.adminURL
 }
+
+func (c *Client) ExchangeCodeForSession(provider, code, state string) (string, error) {
+	// For OAuth flows with Kratos, the code exchange typically happens through
+	// the browser flow. For mobile apps, we need to handle this differently.
+	// This is a simplified implementation - in practice, you might need to
+	// work with Kratos flows more directly or use a different approach
+
+	// Return an error for now indicating this needs proper OAuth flow implementation
+	return "", &KratosError{
+		Code:    400,
+		Status:  "Bad Request",
+		Message: fmt.Sprintf("OAuth code exchange not implemented for provider %s", provider),
+	}
+}

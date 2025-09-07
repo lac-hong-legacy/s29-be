@@ -112,12 +112,14 @@ services:
       SECRETS_COOKIE: ${KRATOS_SECRET_COOKIE:-63f4945d921d599f27ae4fdf5bada3f1}
       SECRETS_CIPHER: ${KRATOS_SECRET_CIPHER:-cf62abb2197c0a173c9a76b88caaedc3}
       
-      # # OAuth (Add when ready)
-      # GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      # GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      # OAuth (Add when ready)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-106504667794-f12car7cj376aap9sif32nn5pk1c69if.apps.googleusercontent.com}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-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}
+      FACEBOOK_CLIENT_ID: ${FACEBOOK_CLIENT_ID:-your-facebook-client-id}
+      FACEBOOK_CLIENT_SECRET: ${FACEBOOK_CLIENT_SECRET:-your-facebook-client-secret}
       
      # Email configuration (using Mailhog for development)
-      COURIER_SMTP_CONNECTION_URI: smtp://mailhog:1025
+      COURIER_SMTP_CONNECTION_URI: smtp://mailhog:1025/?skip_ssl_verify=true
       COURIER_SMTP_FROM_ADDRESS: noreply@suviet.com
       COURIER_SMTP_FROM_NAME: "Suviet Platform"
 
