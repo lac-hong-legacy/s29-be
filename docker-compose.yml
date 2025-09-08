@@ -113,8 +113,8 @@ services:
       SECRETS_CIPHER: ${KRATOS_SECRET_CIPHER:-cf62abb2197c0a173c9a76b88caaedc3}
       
       # OAuth (Add when ready)
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-106504667794-f12car7cj376aap9sif32nn5pk1c69if.apps.googleusercontent.com}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-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}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-your-google-client-id}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-your-google-client-secret}
       FACEBOOK_CLIENT_ID: ${FACEBOOK_CLIENT_ID:-your-facebook-client-id}
       FACEBOOK_CLIENT_SECRET: ${FACEBOOK_CLIENT_SECRET:-your-facebook-client-secret}
       
