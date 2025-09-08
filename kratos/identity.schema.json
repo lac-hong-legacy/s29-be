@@ -74,6 +74,16 @@
           "type": "string",
           "format": "uri",
           "title": "Profile Image URL"
+        },
+        "provider": {
+          "type": "string",
+          "title": "Authentication Provider",
+          "enum": ["email", "google", "facebook"],
+          "default": "email"
+        },
+        "provider_id": {
+          "type": "string",
+          "title": "Provider User ID"
         }
       },
       "required": [
