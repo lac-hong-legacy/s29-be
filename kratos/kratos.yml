@@ -123,16 +123,7 @@ selfservice:
         default_browser_return_url: http://localhost:3000
 
     login:
-      ui_url: http://localhost:3000/auth/login
       lifespan: 1h
-      after:
-        default_browser_return_url: http://localhost:3000/dashboard
-        hooks:
-          - hook: web_hook
-            config:
-              url: http://s29-api:8080/api/v1/internal/hooks/after-login
-              method: POST
-              body: file:///etc/config/kratos/after-login.jsonnet
 
     registration:
       lifespan: 1h
