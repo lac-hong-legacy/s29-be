@@ -156,7 +156,7 @@ services:
       DB_HOST: s29-db
       DB_PORT: 5432
       DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-mBNoY7Fgigpe9e}
       DB_NAME: ${DB_NAME:-s29}
 
       # Redis
