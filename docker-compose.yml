@@ -5,7 +5,7 @@ services:
     container_name: s29-postgres
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-mBNoY7Fgigpe9e}
       POSTGRES_DB: ${DB_NAME:-s29}
     ports:
       - "5432:5432"
