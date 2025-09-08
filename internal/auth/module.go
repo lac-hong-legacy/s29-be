@@ -66,14 +66,6 @@ func (a *AuthModule) RegisterRoutes(router fiber.Router) {
 		auth.Post("/refresh", a.Handler.RefreshToken)   // Refresh JWT token
 		auth.Post("/validate", a.Handler.ValidateToken) // Validate token (for other services)
 
-		// OAuth endpoints for mobile social login
-		oauth := auth.Group("/oauth")
-		{
-			oauth.Post("/init", a.Handler.InitiateOAuth)                    // Initiate OAuth flow
-			oauth.Get("/:provider/callback", a.Handler.HandleOAuthCallback) // Handle OAuth callback (redirect)
-			oauth.Post("/:provider/complete", a.Handler.CompleteOAuthLogin) // Complete OAuth flow (JSON response)
-		}
-
 		// Protected endpoints
 		protected := auth.Group("")
 		protected.Use(a.Middleware.RequireAuth())

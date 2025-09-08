@@ -2,8 +2,6 @@
 package application
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"fmt"
 	"s29-be/internal/auth/adapters/repository"
 	"s29-be/internal/auth/domain"
@@ -178,29 +176,4 @@ func (s *AuthService) FindUserByKratosIdentityID(kratosID uuid.UUID) (*model.Use
 
 func (s *AuthService) UpdateUserLastLogin(user *model.User) error {
 	return s.authRepo.UpdateUserLastLogin(user)
-}
-
-func (s *AuthService) InitiateOAuthFlow(provider, redirectURI, state string) (string, string, error) {
-	if state == "" {
-		stateBytes := make([]byte, 32)
-		if _, err := rand.Read(stateBytes); err != nil {
-			return "", "", appError.NewInternalError(err, "failed to generate state")
-		}
-		state = base64.URLEncoding.EncodeToString(stateBytes)
-	}
-
-	baseURL := "http://localhost:4433"
-	authURL := fmt.Sprintf("%s/self-service/methods/oidc/auth/%s?return_to=%s&state=%s",
-		baseURL, provider, redirectURI, state)
-
-	return authURL, state, nil
-}
-
-func (s *AuthService) HandleOAuthCallback(provider, code, state string) (*domain.LoginResponse, error) {
-	sessionToken, err := s.kratosClient.ExchangeCodeForSession(provider, code, state)
-	if err != nil {
-		return nil, appError.NewUnauthorizedError(err, "failed to exchange OAuth code")
-	}
-
-	return s.VerifySessionAndIssueJWT(sessionToken)
 }
