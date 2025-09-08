@@ -64,28 +64,28 @@ selfservice:
       config:
         lifespan: 15m
     
-    oidc:
-      enabled: true
-      config:
-        providers:
-          - id: google
-            provider: google
-            client_id: ${GOOGLE_OIDC_CLIENT_ID}
-            client_secret: ${GOOGLE_OIDC_CLIENT_SECRET}
-            issuer_url: https://accounts.google.com
-            mapper_url: file:///etc/config/kratos/google-mapper.jsonnet
-            scopes:
-              - openid
-              - profile
-              - email
-          - id: facebook
-            provider: facebook
-            client_id: ${FACEBOOK_OIDC_CLIENT_ID}
-            client_secret: ${FACEBOOK_OIDC_CLIENT_SECRET}
-            mapper_url: file:///etc/config/kratos/facebook-mapper.jsonnet
-            scopes:
-              - public_profile
-              - email
+    # oidc:
+    #   enabled: true
+    #   config:
+    #     providers:
+    #       - id: google
+    #         provider: google
+    #         client_id: ${GOOGLE_OIDC_CLIENT_ID}
+    #         client_secret: ${GOOGLE_OIDC_CLIENT_SECRET}
+    #         issuer_url: https://accounts.google.com
+    #         mapper_url: file:///etc/config/kratos/google-mapper.jsonnet
+    #         scopes:
+    #           - openid
+    #           - profile
+    #           - email
+    #       - id: facebook
+    #         provider: facebook
+    #         client_id: ${FACEBOOK_OIDC_CLIENT_ID}
+    #         client_secret: ${FACEBOOK_OIDC_CLIENT_SECRET}
+    #         mapper_url: file:///etc/config/kratos/facebook-mapper.jsonnet
+    #         scopes:
+    #           - public_profile
+    #           - email
 
   # Self-service flows
   flows:
