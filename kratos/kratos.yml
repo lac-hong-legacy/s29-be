@@ -39,9 +39,6 @@ selfservice:
     - http://localhost:3000/dashboard
     - http://localhost:3000/profile
     - http://localhost:3000/auth/login
-    - s29app://auth/callback
-    - s29app://oauth/callback
-    - http://localhost:8080/api/v1/auth/oauth/callback
 
   # Authentication methods
   methods:
@@ -64,28 +61,16 @@ selfservice:
       config:
         lifespan: 15m
     
+    # Add these when ready for 2FA
+    totp:
+      enabled: false
+    
+    webauthn:
+      enabled: false
+    
+    # Add OAuth when ready
     oidc:
-      enabled: true
-      config:
-        providers:
-          - id: google
-            provider: google
-            client_id: ${GOOGLE_OIDC_CLIENT_ID}
-            client_secret: ${GOOGLE_OIDC_CLIENT_SECRET}
-            issuer_url: https://accounts.google.com
-            mapper_url: file:///etc/config/kratos/google-mapper.jsonnet
-            scope:
-              - openid
-              - profile
-              - email
-          - id: facebook
-            provider: facebook
-            client_id: ${FACEBOOK_OIDC_CLIENT_ID}
-            client_secret: ${FACEBOOK_OIDC_CLIENT_SECRET}
-            mapper_url: file:///etc/config/kratos/facebook-mapper.jsonnet
-            scope:
-              - public_profile
-              - email
+      enabled: false
 
   # Self-service flows
   flows:
@@ -123,6 +108,7 @@ selfservice:
         default_browser_return_url: http://localhost:3000
 
     login:
+      ui_url: http://localhost:3000/auth/login
       lifespan: 1h
 
     registration:
