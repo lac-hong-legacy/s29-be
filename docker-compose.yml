@@ -5,7 +5,7 @@ services:
     container_name: s29-postgres
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-mBNoY7Fgigpe9e}
       POSTGRES_DB: ${DB_NAME:-s29}
     ports:
       - "5432:5432"
@@ -112,12 +112,14 @@ services:
       SECRETS_COOKIE: ${KRATOS_SECRET_COOKIE:-63f4945d921d599f27ae4fdf5bada3f1}
       SECRETS_CIPHER: ${KRATOS_SECRET_CIPHER:-cf62abb2197c0a173c9a76b88caaedc3}
       
-      # # OAuth (Add when ready)
-      # GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      # GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      # OAuth (Add when ready)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-your-google-client-id}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-your-google-client-secret}
+      FACEBOOK_CLIENT_ID: ${FACEBOOK_CLIENT_ID:-your-facebook-client-id}
+      FACEBOOK_CLIENT_SECRET: ${FACEBOOK_CLIENT_SECRET:-your-facebook-client-secret}
       
      # Email configuration (using Mailhog for development)
-      COURIER_SMTP_CONNECTION_URI: smtp://mailhog:1025
+      COURIER_SMTP_CONNECTION_URI: smtp://mailhog:1025/?skip_ssl_verify=true
       COURIER_SMTP_FROM_ADDRESS: noreply@suviet.com
       COURIER_SMTP_FROM_NAME: "Suviet Platform"
 
@@ -154,7 +156,7 @@ services:
       DB_HOST: s29-db
       DB_PORT: 5432
       DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-mBNoY7Fgigpe9e}
       DB_NAME: ${DB_NAME:-s29}
 
       # Redis
