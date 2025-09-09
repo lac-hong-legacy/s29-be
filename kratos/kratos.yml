@@ -5,7 +5,7 @@ dsn: postgres://kratos:kratos@kratos-db:5432/kratos?sslmode=disable&max_conns=50
 
 serve:
   public:
-    base_url: http://localhost:4433
+    base_url: http://103.163.119.107:4433
     cors:
       enabled: true
       allowed_origins:
@@ -70,8 +70,8 @@ selfservice:
         providers:
           - id: google
             provider: google
-            client_id: ${GOOGLE_OIDC_CLIENT_ID}
-            client_secret: ${GOOGLE_OIDC_CLIENT_SECRET}
+            client_id: ""
+            client_secret: ""
             issuer_url: https://accounts.google.com
             mapper_url: file:///etc/config/kratos/google-mapper.jsonnet
             scope:
@@ -80,8 +80,8 @@ selfservice:
               - email
           - id: facebook
             provider: facebook
-            client_id: ${FACEBOOK_OIDC_CLIENT_ID}
-            client_secret: ${FACEBOOK_OIDC_CLIENT_SECRET}
+            client_id: "your-facebook-client-id"
+            client_secret: "your-facebook-client-secret"
             mapper_url: file:///etc/config/kratos/facebook-mapper.jsonnet
             scope:
               - public_profile
