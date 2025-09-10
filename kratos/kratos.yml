@@ -177,9 +177,9 @@ hashers:
 # Email configuration (Mailhog for development)
 courier:
   smtp:
-    connection_uri: ${COURIER_SMTP_CONNECTION_URI}
-    from_address: ${COURIER_SMTP_FROM_ADDRESS}
-    from_name: ${COURIER_SMTP_FROM_NAME}
+    connection_uri: "smtp://mailhog:1025/?skip_ssl_verify=true"
+    from_address: "noreply@suviet.com"
+    from_name: "Suviet Platform"
   
   
 feature_flags:
@@ -187,10 +187,10 @@ feature_flags:
 
 # Logging
 log:
-  level: ${KRATOS_LOG_LEVEL}
+  level: debug
   format: text
   leak_sensitive_values: true
 
 # Development mode
 dev:
-  disable_csrf: ${KRATOS_DEV_DISABLE_CSRF}
+  disable_csrf: true
