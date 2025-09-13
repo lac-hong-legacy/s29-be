@@ -9,7 +9,6 @@ serve:
     cors:
       enabled: true
       allowed_origins:
-        - http://localhost:3000
         - http://localhost:8080
       allowed_methods:
         - GET
@@ -33,12 +32,7 @@ serve:
     base_url: http://localhost:4434
 
 selfservice:
-  default_browser_return_url: http://localhost:3000/dashboard
   allowed_return_urls:
-    - http://localhost:3000
-    - http://localhost:3000/dashboard
-    - http://localhost:3000/profile
-    - http://localhost:3000/auth/login
     - s29app://auth/callback
     - s29app://oauth/callback
     - http://localhost:8080/api/v1/auth/oauth/callback
@@ -89,8 +83,8 @@ selfservice:
 
   # Self-service flows
   flows:
-    error:
-      ui_url: http://localhost:3000/auth/error
+    # error:
+    #   ui_url: http://localhost:3000/auth/error
 
     settings:
       privileged_session_max_age: 15m
@@ -115,19 +109,18 @@ selfservice:
       ui_url: http://localhost:3000/auth/verification
       lifespan: 24h
       notify_unknown_recipients: false
-      after:
-        default_browser_return_url: http://localhost:3000/dashboard?verified=true
+      # after:
+      #   default_browser_return_url: http://localhost:3000/dashboard?verified=true
 
     logout:
-      after:
-        default_browser_return_url: http://localhost:3000
+      # after:
+      #   default_browser_return_url: http://localhost:3000
 
     login:
       lifespan: 1h
 
     registration:
       lifespan: 1h
-      ui_url: http://localhost:3000/auth/register
       after:
         password:
           hooks:
